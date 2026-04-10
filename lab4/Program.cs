@@ -6,49 +6,49 @@ using System.Globalization;
 
 namespace LaboratoriumLinq
 {
-    // --- MODELE DANYCH (Zadanie 1) ---
-    // Przyjmujemy zgodnie z poleceniem, że każde pole to String
-    
+
+
+    // firstly, I need to write down all classes that will be used in files (every field is a string)
+
     public class Region
     {
-        public string RegionID { get; set; }
-        public string RegionDescription { get; set; }
+        public string? RegionID { get; set; }
+        public string? RegionDescription { get; set; }
     }
 
     public class Territory
     {
-        public string TerritoryID { get; set; }
-        public string TerritoryDescription { get; set; }
-        public string RegionID { get; set; }
+        public string? TerritoryID { get; set; }
+        public string? TerritoryDescription { get; set; }
+        public string? RegionID { get; set; }
     }
 
     public class EmployeeTerritory
     {
-        public string EmployeeID { get; set; }
-        public string TerritoryID { get; set; }
+        public string? EmployeeID { get; set; }
+        public string? TerritoryID { get; set; }
     }
 
     public class Employee
     {
-        public string EmployeeID { get; set; }
-        public string LastName { get; set; }
+        public string? EmployeeID { get; set; }
+        public string? LastName { get; set; }
     }
 
     public class Order
     {
-        public string OrderID { get; set; }
-        public string EmployeeID { get; set; }
+        public string? OrderID { get; set; }
+        public string? EmployeeID { get; set; }
     }
 
     public class OrderDetail
     {
-        public string OrderID { get; set; }
-        public string UnitPrice { get; set; }
-        public string Quantity { get; set; }
-        public string Discount { get; set; }
+        public string? OrderID { get; set; }
+        public string? UnitPrice { get; set; }
+        public string? Quantity { get; set; }
+        public string? Discount { get; set; }
     }
 
-    // --- UNIWERSALNA KLASA WCZYTUJĄCA (Zadanie 1) ---
     class Wczytywacz<T>
     {
         public List<T> WczytajListe(string path, Func<string[], T> generuj)
@@ -59,7 +59,7 @@ namespace LaboratoriumLinq
                 return new List<T>();
             }
 
-            // Skip(1) pomija nagłówki CSV
+            // skip(1) pomija nagłówki CSV
             return File.ReadAllLines(path)
                        .Skip(1)
                        .Where(line => !string.IsNullOrWhiteSpace(line))
@@ -73,13 +73,12 @@ namespace LaboratoriumLinq
     {
         static void Main(string[] args)
         {
-            // --- KONFIGURACJA ŚCIEŻKI ---
-            // Zmień poniższą ścieżkę na folder, w którym masz pliki .csv
-            string basePath = @"D:\AGH\4sem\4sem_pz2\lab4\"; 
+            // KONFIGURACJA ŚCIEŻKI
+            string basePath = @"D:\AGH\4_sem\4sem_pz2\lab4\"; 
 
-            var loader = new Wczytywacz<object>(); // Pomocniczy obiekt do typów
+            var loader = new Wczytywacz<object>(); 
 
-            // --- 1. WCZYTYWANIE DANYCH ---
+            // 1. WCZYT DANYCH 
             var regions = new Wczytywacz<Region>().WczytajListe(basePath + "regions.csv", 
                 x => new Region { RegionID = x[0], RegionDescription = x[1].Trim() });
 
@@ -93,13 +92,13 @@ namespace LaboratoriumLinq
                 x => new Employee { EmployeeID = x[0], LastName = x[1] });
 
 
-            // --- 2. NAZWISKA WSZYSTKICH PRACOWNIKÓW ---
+            // 2. NAZWISKA WSZYSTKICH PRACOWNIKÓW 
             Console.WriteLine("2. Nazwiska wszystkich pracowników:");
             var names = employees.Select(e => e.LastName);
             foreach (var n in names) Console.WriteLine(n);
 
 
-            // --- 3. PRACOWNIK - REGION - TERYTORIUM (Płaska lista) ---
+            // 3. PRACOWNIK - REGION - TERYTORIUM (Płaska lista) 
             Console.WriteLine("\n3. Nazwisko - Region - Terytorium:");
             var flatList = from e in employees
                            join et in empTerritories on e.EmployeeID equals et.EmployeeID
@@ -111,7 +110,7 @@ namespace LaboratoriumLinq
                 Console.WriteLine($"{item.LastName} | {item.RegionDescription} | {item.TerritoryDescription}");
 
 
-            // --- 4. REGIONY Z LISTĄ PRACOWNIKÓW (GroupJoin) ---
+            //  4. REGIONY Z LISTĄ PRACOWNIKÓW (GroupJoin)
             Console.WriteLine("\n4. Regiony i przypisani pracownicy:");
             var regionGroups = regions.GroupJoin(
                 territories.Join(empTerritories, t => t.TerritoryID, et => et.TerritoryID, (t, et) => new { t.RegionID, et.EmployeeID })
@@ -131,13 +130,13 @@ namespace LaboratoriumLinq
             }
 
 
-            // --- 5. LICZBA PRACOWNIKÓW W REGIONACH ---
+            // 5. LICZBA PRACOWNIKÓW W REGIONACH 
             Console.WriteLine("\n5. Statystyka pracowników w regionach:");
             foreach (var rg in regionGroups)
                 Console.WriteLine($"{rg.RegionName}: {rg.EmpNames.Count()}");
 
 
-            // --- 6. ZAMÓWIENIA (Orders & Details) ---
+            // 6. ZAMÓWIENIA (Orders & Details) 
             Console.WriteLine("\n6. Statystyki zamówień pracowników:");
             var orders = new Wczytywacz<Order>().WczytajListe(basePath + "orders.csv", 
                 x => new Order { OrderID = x[0], EmployeeID = x[2] });
@@ -168,7 +167,6 @@ namespace LaboratoriumLinq
             foreach (var s in empStats)
                 Console.WriteLine($"{s.LastName.PadRight(10)} | Liczba: {s.Count} | Średnia: {s.Avg:F2} | Max: {s.Max:F2}");
 
-            Console.WriteLine("\nNaciśnij dowolny klawisz, aby zakończyć...");
             Console.ReadKey();
         }
     }
